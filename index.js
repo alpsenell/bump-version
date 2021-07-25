@@ -7,7 +7,7 @@ Toolkit.run(async (tools) => {
   const event = tools.context.payload;
   console.log('process env:',process.env);
   console.log('pkg:',pkg);
-  console.log('event:',process.event);
+  console.log('event:', event);
   const currentVersion = pkg.version.toString();
   const currentPatchVersion = currentVersion.split('.')[2];
   const commitMessage = process.env['INPUT_COMMIT-MESSAGE'] || 'ci: version bump to {{version}}';
