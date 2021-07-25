@@ -11,6 +11,10 @@ inputs:
     description: 'Prefix that is used for the git tag'
     default: ''
     required: false
+  skip-words:
+    description: 'Words list that do not trigger a version bump'
+    default: 'unit test'
+    required: false
   minor-words:
     description: 'Minor version bump'
     default: 'MINOR VERSION UPDATE'

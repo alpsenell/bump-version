@@ -9,9 +9,16 @@ Toolkit.run(async (tools) => {
   const currentPatchVersion = currentVersion.split('.')[2];
   const commitMessage = process.env['INPUT_COMMIT-MESSAGE'] || 'ci: version bump to {{version}}';
   const majorWords = process.env['INPUT_MAJOR-WORDS'].split(',');
+  const skipWords = process.env['INPUT_SKIP-WORDS'].split(',');
   const minorWords = process.env['INPUT_MINOR-WORDS'].split(',');
   const patchWords = process.env['INPUT_PATCH-WORDS'] ? process.env['INPUT_PATCH-WORDS'].split(',') : null;
   const messages = event.commits ? event.commits.map((commit) => commit.message + '\n' + commit.body) : [];
+
+  if (messages.some(message => skipWords.some(word => message.includes(word)))) {
+    tools.exit.success('Skipping words are found in commit message, no version update necessary!');
+
+    return;
+  }
 
   console.log('config words:', { majorWords, minorWords, patchWords });
 
@@ -88,5 +95,6 @@ Toolkit.run(async (tools) => {
     tools.log.fatal(e);
     tools.exit.failure('Failed to bump version');
   }
-  tools.exit.success('Version bumped!');
+
+  tools.exit.success('Version bumped successfully!');
 });
