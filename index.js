@@ -10,7 +10,7 @@ Toolkit.run(async (tools) => {
   const commitMessage = process.env['INPUT_COMMIT-MESSAGE'] || 'ci: version bump to {{version}}';
   const majorWords = process.env['INPUT_MAJOR-WORDS'].split(',');
   const minorWords = process.env['INPUT_MINOR-WORDS'].split(',');
-  const patchWords = process.env['INPUT_PATCH-WORDS'] ? process.env['INPUT_PATCH-WORDING'].split(',') : null;
+  const patchWords = process.env['INPUT_PATCH-WORDS'] ? process.env['INPUT_PATCH-WORDS'].split(',') : null;
   const messages = event.commits ? event.commits.map((commit) => commit.message + '\n' + commit.body) : [];
 
   console.log('config words:', { majorWords, minorWords, patchWords });
