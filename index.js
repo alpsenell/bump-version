@@ -1,13 +1,7 @@
 const { Toolkit } = require('actions-toolkit');
 const { execSync } = require('child_process');
 
-// Change working directory if user defined PACKAGEJSON_DIR
-if (process.env.PACKAGEJSON_DIR) {
-  process.env.GITHUB_WORKSPACE = `${process.env.GITHUB_WORKSPACE}/${process.env.PACKAGEJSON_DIR}`;
-  process.chdir(process.env.GITHUB_WORKSPACE);
-}
-
-console.log(process);
+console.log(process.env);
 
 // Run your GitHub Action!
 Toolkit.run(async (tools) => {
@@ -17,33 +11,23 @@ Toolkit.run(async (tools) => {
   console.log('event:', event);
 
   const currentVersion = pkg.version.toString();
-  const currentMajorVersion = currentVersion.split('.')[0];
-  const currentMinorVersion = currentVersion.split('.')[1];
   const currentPatchVersion = currentVersion.split('.')[2];
-
-  const tagPrefix = process.env['INPUT_TAG-PREFIX'] || '';
-  const messages = event.commits ? event.commits.map((commit) => commit.message + '\n' + commit.body) : [];
-
   const commitMessage = process.env['INPUT_COMMIT-MESSAGE'] || 'ci: version bump to {{version}}';
-  const commitMessageRegex = new RegExp(commitMessage.replace(/{{version}}/g, `${tagPrefix}\\d+\\.\\d+\\.\\d+`), 'ig');
-  const isVersionBump = messages.find((message) => commitMessageRegex.test(message)) !== undefined;
 
   if (isVersionBump) {
     tools.exit.success('No action necessary because we found a previous bump!');
     return;
   }
 
-  const majorWords = process.env['INPUT_MAJOR-WORDING'].split(',');
-  const minorWords = process.env['INPUT_MINOR-WORDING'].split(',');
-  const patchWords = process.env['INPUT_PATCH-WORDING'] ? process.env['INPUT_PATCH-WORDING'].split(',') : null;
-  const preReleaseWords = process.env['INPUT_RC-WORDING'].split(',');
+  const majorWords = process.env['INPUT_MAJOR-WORDS'].split(',');
+  const minorWords = process.env['INPUT_MINOR-WORDS'].split(',');
+  const patchWords = process.env['INPUT_PATCH-WORDS'] ? process.env['INPUT_PATCH-WORDING'].split(',') : null;
 
   console.log('config words:', { majorWords, minorWords, patchWords, preReleaseWords });
 
-  let version = process.env.INPUT_DEFAULT;
-  let foundWord = null;
+  let version = '';
 
-  if (currentPatchVersion == '99') {
+  if (currentPatchVersion === '99') {
     version = 'minor';
   } else if (
     messages.some(
@@ -55,30 +39,15 @@ Toolkit.run(async (tools) => {
     version = 'minor';
   } else if (patchWords && messages.some((message) => patchWords.some((word) => message.includes(word)))) {
     version = 'patch';
-  } else if (
-    messages.some((message) =>
-      preReleaseWords.some((word) => {
-        if (message.includes(word)) {
-          foundWord = word;
-          return true;
-        } else {
-          return false;
-        }
-      }),
-    )
-  ) {
-    version = 'prerelease';
   }
 
-  console.log('version action decision:', version);
+  console.log('To be updated version:', version);
 
-  // case: if nothing of the above matches
-  if (version === null) {
+  if (version === '') {
     tools.exit.success('No version keywords found, skipping bump.');
     return;
   }
 
-  // GIT logic
   try {
     const current = pkg.version.toString();
     // set git user
@@ -100,10 +69,6 @@ Toolkit.run(async (tools) => {
       currentBranch = process.env.GITHUB_HEAD_REF;
       isPullRequest = true;
     }
-    if (process.env['INPUT_TARGET-BRANCH']) {
-      // We want to override the branch that we are pulling / pushing to
-      currentBranch = process.env['INPUT_TARGET-BRANCH'];
-    }
     console.log('currentBranch:', currentBranch);
     // do it in the current checked out github branch (DETACHED HEAD)
     // important for further usage of the package.json version
@@ -124,24 +89,12 @@ Toolkit.run(async (tools) => {
     newVersion = execSync(`npm version --git-tag-version=false ${version}`).toString().trim().replace(/^v/, '');
     newVersion = `${tagPrefix}${newVersion}`;
     console.log(`::set-output name=newTag::${newVersion}`);
-    try {
-      // to support "actions/checkout@v1"
-      await tools.runInWorkspace('git', ['commit', '-a', '-m', commitMessage.replace(/{{version}}/g, newVersion)]);
-    } catch (e) {
-      console.warn(
-        'git commit failed because you are using "actions/checkout@v2"; ' +
-          'but that doesnt matter because you dont need that git commit, thats only for "actions/checkout@v1"',
-      );
-    }
 
     const remoteRepo = `https://${process.env.GITHUB_ACTOR}:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_REPOSITORY}.git`;
-    if (process.env['INPUT_SKIP-TAG'] !== 'true') {
-      await tools.runInWorkspace('git', ['tag', newVersion]);
-      await tools.runInWorkspace('git', ['push', remoteRepo, '--follow-tags']);
-      await tools.runInWorkspace('git', ['push', remoteRepo, '--tags']);
-    } else {
-      await tools.runInWorkspace('git', ['push', remoteRepo]);
-    }
+
+    await tools.runInWorkspace('git', ['tag', newVersion]);
+    await tools.runInWorkspace('git', ['push', remoteRepo, '--follow-tags']);
+    await tools.runInWorkspace('git', ['push', remoteRepo, '--tags']);
   } catch (e) {
     tools.log.fatal(e);
     tools.exit.failure('Failed to bump version');
