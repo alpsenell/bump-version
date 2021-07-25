@@ -1,17 +1,17 @@
 {
-  "name": "gh-action-bump-version",
-  "version": "8.6.0",
+  "name": "bump-version",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alpsenell/gh-action-bump-version.git"
+    "url": "git+https://github.com/alpsenell/bump-version.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/alpsenell/gh-action-bump-version/issues"
+    "url": "https://github.com/alpsenell/bump-version/issues"
   },
-  "homepage": "https://github.com/alpsenell/gh-action-bump-version#readme",
+  "homepage": "https://github.com/alpsenell/bump-version#readme",
   "private": true,
   "main": "index.js",
   "scripts": {
