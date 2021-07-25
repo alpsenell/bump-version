@@ -13,12 +13,15 @@ inputs:
     required: false
   minor-words:
     description: 'Minor version bump'
+    default: 'MINOR VERSION UPDATE'
     required: false
   major-words:
     description: 'Major version bump'
+    default: 'MAJOR VERSION UPDATE'
     required: false
   patch-words:
     description: 'Patch version bump'
+    default: 'Patch VERSION UPDATE'
     required: false
   commit-message:
     description: 'Set a custom commit message for version bump commit'
