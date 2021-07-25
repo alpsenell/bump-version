@@ -4,22 +4,14 @@ const { execSync } = require('child_process');
 // Run your GitHub Action!
 Toolkit.run(async (tools) => {
   const pkg = tools.getPackageJSON();
-  const event = tools.context.payload;
-
   const currentVersion = pkg.version.toString();
   const currentPatchVersion = currentVersion.split('.')[2];
   const commitMessage = process.env['INPUT_COMMIT-MESSAGE'] || 'ci: version bump to {{version}}';
-
-  if (isVersionBump) {
-    tools.exit.success('No action necessary because we found a previous bump!');
-    return;
-  }
-
   const majorWords = process.env['INPUT_MAJOR-WORDS'].split(',');
   const minorWords = process.env['INPUT_MINOR-WORDS'].split(',');
   const patchWords = process.env['INPUT_PATCH-WORDS'] ? process.env['INPUT_PATCH-WORDING'].split(',') : null;
 
-  console.log('config words:', { majorWords, minorWords, patchWords, preReleaseWords });
+  console.log('config words:', { majorWords, minorWords, patchWords });
 
   let version = '';
 
