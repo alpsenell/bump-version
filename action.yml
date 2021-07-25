@@ -19,7 +19,6 @@ inputs:
     required: false
   patch-words:
     description: 'Patch version bump'
-    default: 'SD-'
     required: false
   commit-message:
     description: 'Set a custom commit message for version bump commit'
